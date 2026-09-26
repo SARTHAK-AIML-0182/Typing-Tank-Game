@@ -1,0 +1,373 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TYPE//TANK — Retro DOS arcade typing defense game. Type words to fire your tank cannon and defend the perimeter." />
+  <title>TYPE//TANK — BALLISTIC TYPING DEFENSE</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+<!-- CRT Effects -->
+<div id="crt-overlay" aria-hidden="true"></div>
+<div id="scanlines" aria-hidden="true"></div>
+<canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+<div id="app-root">
+  <div class="aspect-inner">
+
+    <!-- ── HEADER ──────────────────────────────────────────────────────── -->
+    <header id="header" role="banner">
+      <div class="hdr-logo">TYPE//<span>TANK</span></div>
+      <div class="hdr-sep">|</div>
+      <div class="hdr-callsign" id="hdr-callsign">OPR:???</div>
+      <div class="hdr-spacer"></div>
+      <button class="hdr-btn" id="btn-crt" title="Toggle CRT Scanlines" aria-label="Toggle CRT effect">[CRT:ON]</button>
+      <button class="hdr-btn" id="btn-mute" title="Toggle Audio" aria-label="Toggle audio">[AUDIO:ON]</button>
+      <button class="hdr-btn" id="btn-aspect" title="Cycle Aspect Ratio" aria-label="Cycle aspect ratio">[AUTO]</button>
+      <button class="hdr-btn" id="btn-callsign" title="Switch Callsign" aria-label="Switch callsign">[SWITCH CALLSIGN]</button>
+    </header>
+
+    <!-- ── MARQUEE ──────────────────────────────────────────────────────── -->
+    <div class="marquee-strip" aria-hidden="true">
+      <span class="marquee-text">
+        ◄ TYPE//TANK v1.0 ► BALLISTIC TYPING DEFENSE SYSTEM ► ENGAGE HOSTILES ► TYPE TO FIRE ► DEFEND THE PERIMETER ►
+        TURRET ONLINE ► TARGETING SYSTEM ACTIVE ► AMMUNITION UNLIMITED ► ARMOR INTEGRITY NOMINAL ► MISSION: SURVIVE ►
+      </span>
+    </div>
+
+    <!-- ── SCREENS ───────────────────────────────────────────────────────── -->
+    <main id="screens" role="main">
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 1: LOGIN                                                     -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-login" class="screen" aria-label="Operator Authentication">
+        <div class="screen-inner">
+          <div class="login-boot-text">
+            BALLISTIC DEFENSE SYSTEM v4.7.2 :: INITIALIZING...<br />
+            TURRET SUBSYSTEMS ONLINE :: TARGETING ACQUIRED<br />
+            OPERATOR AUTHENTICATION REQUIRED
+          </div>
+
+          <div class="login-title-art">TYPE//TANK</div>
+          <div class="login-subtitle">◄ BALLISTIC TYPING DEFENSE ►</div>
+
+          <form class="login-form" onsubmit="return false;" autocomplete="off">
+            <div class="login-prompt">CALLSIGN> IDENTIFICATION REQUIRED:</div>
+            <div class="terminal-input-row">
+              <span class="terminal-prompt-label">CALLSIGN&gt;</span>
+              <input
+                type="text"
+                id="callsign-input"
+                maxlength="16"
+                placeholder="ENTER CALLSIGN..."
+                aria-label="Enter your callsign"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="callsign-error" id="callsign-error" role="alert" aria-live="assertive"></div>
+            <button class="btn-primary" id="callsign-submit" type="button" aria-label="Authenticate operator">
+              <span>[ AUTHENTICATE OPERATOR ]</span>
+            </button>
+          </form>
+
+          <div style="margin-top:20px; font-family:var(--font-mono); font-size:clamp(9px,1.2vw,12px); color:var(--green-dim); text-align:center; line-height:1.8;">
+            +----------------------------------------+<br />
+            &nbsp;PRESS ENTER TO CONFIRM AUTHENTICATION&nbsp;<br />
+            +----------------------------------------+
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 2: SETTINGS                                                  -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-settings" class="screen" aria-label="Arsenal and Display Configuration">
+        <div class="screen-inner">
+          <div class="ascii-title">+──[ ARSENAL CONFIGURATION ]──+</div>
+
+          <div class="settings-grid">
+
+            <!-- Left: Mode cards -->
+            <div>
+              <div class="section-label">ARSENAL MODE SELECTION</div>
+              <div id="mode-cards" class="mode-cards-grid" role="radiogroup" aria-label="Arsenal mode selection">
+                <!-- Rendered by JS -->
+              </div>
+
+              <div class="section-label" style="margin-top:10px;">CHARACTER MATRIX</div>
+              <div id="char-matrix" class="char-matrix" role="group" aria-label="Character matrix toggles">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Right: Sample + Aspect -->
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <div class="section-label">LIVE WORD PREVIEW</div>
+                <div style="border:1px solid var(--green-dim);background:rgba(0,10,0,0.8);padding:10px;">
+                  <div style="font-family:var(--font-mono);font-size:clamp(9px,1.2vw,12px);color:var(--green-dim);margin-bottom:6px;">SAMPLE TARGETS:</div>
+                  <div id="sample-bar" class="sample-bar" aria-live="polite"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label">DISPLAY MODE</div>
+                <div id="aspect-btns" class="aspect-btns" role="group" aria-label="Aspect ratio selection">
+                  <!-- Rendered by JS -->
+                </div>
+              </div>
+
+              <div style="border:1px solid rgba(0,100,30,0.3);background:rgba(0,10,0,0.7);padding:10px;">
+                <div style="font-family:var(--font-mono);font-size:clamp(9px,1.2vw,12px);color:var(--green-dim);line-height:1.7;">
+                  <span style="color:var(--green);">MODE 1:</span> Lowercase always active<br />
+                  <span style="color:var(--amber);">MODE 2:</span> Adds Uppercase targets<br />
+                  <span style="color:#00ccff;">MODE 3:</span> Adds Numeric sequences<br />
+                  <span style="color:var(--red);">MODE 4:</span> Full special char assault
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-footer">
+            <button class="btn-primary" id="settings-proceed" aria-label="Proceed to instructions">
+              <span>[ PROCEED TO BRIEFING → ]</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 3: INSTRUCTIONS                                              -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-instructions" class="screen" aria-label="Tactical Briefing">
+        <div class="screen-inner">
+          <div class="ascii-title">+──[ TACTICAL COMBAT BRIEFING ]──+</div>
+
+          <div class="instr-mode-pill" id="instr-mode-display">MODE 1 [ALPHA]</div>
+
+          <div class="instr-grid" role="list">
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">01 // HOSTILE INCURSION</div>
+              <div class="instr-card-body">
+                <span class="hl">Enemy words fall</span> from the top of the screen.<br />
+                Neutralize all threats before they <span class="hl-red">breach the perimeter</span>.<br />
+                Words that reach the bottom <span class="hl-red">detonate</span> and damage hull.
+              </div>
+            </div>
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">02 // TURRET TARGETING PROTOCOL</div>
+              <div class="instr-card-body">
+                <span class="hl">Type characters to fire.</span> Tank auto-locks on the<br />
+                <span class="hl-amber">lowest / closest word</span> matching your first key.<br />
+                Continue typing to destroy the locked target.
+              </div>
+            </div>
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">03 // BALLISTIC FIRE SYSTEM</div>
+              <div class="instr-card-body">
+                Every correct keystroke <span class="hl">fires a visible bullet.</span><br />
+                The 180° cannon <span class="hl">tracks and rotates</span> to aim.<br />
+                Typed chars <span class="hl-amber">fade to 35% opacity</span>. Next target char glows.
+              </div>
+            </div>
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">04 // RED BONUS TARGETS</div>
+              <div class="instr-card-body">
+                <span class="hl-red">★ CRIMSON TARGETS</span> fall faster and award<br />
+                <span class="hl-amber">3.5× score multiplier.</span><br />
+                Competing words with same initial are suppressed.<br />
+                3-second cooldown after red word resolved.
+              </div>
+            </div>
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">05 // HULL INTEGRITY</div>
+              <div class="instr-card-body">
+                Tank starts at <span class="hl">100% hull integrity.</span><br />
+                Breached word: <span class="hl-red">-20% damage.</span> Bonus breach: <span class="hl-red">-30%.</span><br />
+                Hull at 0% = <span class="hl-red">SORTIE TERMINATED.</span><br />
+                <span class="hl-amber">ESC key</span> aborts sortie at any time.
+              </div>
+            </div>
+
+            <div class="instr-card" role="listitem">
+              <div class="instr-card-title">06 // SCORING & COMBOS</div>
+              <div class="instr-card-body">
+                Score = <span class="hl">word length × 10 × mode multiplier.</span><br />
+                Consecutive kills build <span class="hl-amber">COMBO multiplier.</span><br />
+                Miss or wrong key <span class="hl-red">breaks combo chain.</span><br />
+                Difficulty <span class="hl">scales progressively</span> over time.
+              </div>
+            </div>
+
+          </div>
+
+          <div class="instr-footer">
+            <button class="btn-primary" id="instructions-proceed" aria-label="Engage combat sortie">
+              <span>[ ENGAGE SORTIE ]</span>
+            </button>
+            <div class="engage-prompt">PRESS SPACEBAR OR ENTER TO ENGAGE</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 4: GAME                                                      -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-game" class="screen" aria-label="Combat Arena">
+        <canvas id="game-canvas" aria-label="Typing defense game canvas" role="img"></canvas>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 5: RESULT                                                    -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-result" class="screen" aria-label="Sortie Debrief">
+        <div class="screen-inner">
+          <div class="ascii-title">+──[ SORTIE DEBRIEF ]──+</div>
+          <div class="result-title">COMBAT ANALYSIS COMPLETE</div>
+
+          <div class="record-banner" id="record-banner" role="alert" aria-live="assertive">
+            ★ NEW PERSONAL RECORD! ★
+          </div>
+
+          <div class="record-delta" id="record-delta" role="status" aria-live="polite"></div>
+
+          <div class="result-grid" role="list">
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">FINAL SCORE</div>
+              <div class="result-cell-value" id="res-score">000000</div>
+            </div>
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">AVG WPM</div>
+              <div class="result-cell-value" id="res-wpm">0</div>
+            </div>
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">ACCURACY</div>
+              <div class="result-cell-value" id="res-acc">0%</div>
+            </div>
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">WORDS KILLED</div>
+              <div class="result-cell-value" id="res-words">0</div>
+            </div>
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">MAX COMBO</div>
+              <div class="result-cell-value" id="res-combo">x0</div>
+            </div>
+            <div class="result-cell" role="listitem">
+              <div class="result-cell-label">ARSENAL MODE</div>
+              <div class="result-cell-value" style="font-size:clamp(8px,1.2vw,13px);" id="res-mode">MODE 1</div>
+            </div>
+          </div>
+
+          <div class="result-btns">
+            <button class="btn-primary" id="res-play-again" aria-label="Play again">
+              <span>[ PLAY AGAIN ]</span>
+            </button>
+            <button class="btn-primary" id="res-records" aria-label="View records" style="border-color:var(--amber);color:var(--amber);">
+              <span>[ R ] FLIGHT LOGS</span>
+            </button>
+          </div>
+          <div class="result-key-hint">
+            [ ENTER / SPACE ] PLAY AGAIN &nbsp;|&nbsp; [ R ] FLIGHT LOGS
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <!-- SCREEN 6: RECORDS                                                   -->
+      <!-- ─────────────────────────────────────────────────────────────────── -->
+      <section id="screen-records" class="screen" aria-label="Performance History and Flight Logs">
+        <div class="screen-inner">
+          <div class="ascii-title">+──[ OPERATOR FLIGHT LOGS ]──+</div>
+
+          <div class="records-layout">
+
+            <!-- Lifetime overview -->
+            <div>
+              <div class="section-label">LIFETIME OPERATOR OVERVIEW</div>
+              <div id="lifetime-stats" class="lifetime-stats" role="list">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Mode bests -->
+            <div>
+              <div class="section-label">ARSENAL MODE PERSONAL BESTS</div>
+              <div id="mode-bests" class="mode-bests" role="list">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- History table -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                <div class="section-label" style="margin-bottom:0;">SORTIE FLIGHT LOG</div>
+                <div class="filter-row" role="group" aria-label="Filter flight logs by mode">
+                  <button class="filter-btn active" data-filter="all" aria-label="Show all modes">ALL MODES</button>
+                  <button class="filter-btn" data-filter="1" aria-label="Show Mode 1 only">MODE 1</button>
+                  <button class="filter-btn" data-filter="2" aria-label="Show Mode 2 only">MODE 2</button>
+                  <button class="filter-btn" data-filter="3" aria-label="Show Mode 3 only">MODE 3</button>
+                  <button class="filter-btn" data-filter="4" aria-label="Show Mode 4 only">MODE 4</button>
+                </div>
+              </div>
+
+              <div class="history-table-wrap" role="region" aria-label="Flight log table">
+                <table class="history-table" aria-label="Sortie history">
+                  <thead>
+                    <tr>
+                      <th scope="col">TIMESTAMP</th>
+                      <th scope="col">MODE</th>
+                      <th scope="col">SCORE</th>
+                      <th scope="col">WPM</th>
+                      <th scope="col">ACC</th>
+                      <th scope="col">COMBO</th>
+                      <th scope="col">KILLS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-tbody">
+                    <tr><td colspan="7" class="no-data">[ NO FLIGHT LOGS RECORDED ]</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="records-actions">
+              <button class="btn-primary" id="records-back" aria-label="Return to previous screen">
+                <span>[ ← RETURN ]</span>
+              </button>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div id="purge-confirm" class="purge-confirm" role="alertdialog" aria-label="Confirm log purge">
+                  <span>PURGE ALL LOGS?</span>
+                  <button class="btn-danger" id="purge-yes" aria-label="Confirm purge">[ CONFIRM ]</button>
+                  <button class="hdr-btn" id="purge-no" aria-label="Cancel purge">[ CANCEL ]</button>
+                </div>
+                <button class="btn-danger" id="purge-btn" aria-label="Purge all flight logs">[ PURGE LOGS ]</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- .aspect-inner -->
+</div><!-- #app-root -->
+
+<!-- Scripts (load order matters) -->
+<script src="js/words.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
