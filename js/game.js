@@ -29,7 +29,7 @@ const Game = (() => {
       bullets: [],      // projectile objects
       particles: [],    // particle effects
       lockedWord: null, // currently targeted word
-      lastSpawn: now + 2000, // 2 second grace period before first spawn
+      lastSpawn: 0, // will spawn immediately once grace period ends
       spawnInterval: 3000,
       startTime: now + 2000, // elapsed timer also starts after grace
       elapsed: 0,
@@ -274,8 +274,8 @@ const Game = (() => {
     state.spawnInterval = Math.max(1200, 3000 - state.difficulty * 400);
 
 
-    // Spawn words
-    if (now - state.lastSpawn > state.spawnInterval && state.words.filter(w => w.active).length < 8) {
+    // Spawn words (only after grace period)
+    if (state.elapsed > 0 && now - state.lastSpawn > state.spawnInterval && state.words.filter(w => w.active).length < 8) {
       spawnWord();
       state.lastSpawn = now;
     }
@@ -688,32 +688,42 @@ const Game = (() => {
     ctx.strokeRect(0, 0, w, 38);
 
     ctx.font = '10px "Share Tech Mono", monospace';
+
+    // Operator callsign
+    ctx.fillStyle = '#ffaa00';
+    ctx.fillText(`OPR:${cfg.callsign}`, 10, 15);
+
+    // Mode
+    const modeNames = ['ALPHA','BRAVO','CHARLIE','DELTA'];
+    ctx.fillStyle = 'rgba(0,255,65,0.6)';
+    ctx.fillText(`M${cfg.mode}[${modeNames[cfg.mode-1]}]`, 10, 30);
+
     ctx.fillStyle = '#00ff41';
 
     // Score
     const scoreStr = String(state.score).padStart(6, '0');
-    ctx.fillText(`SCORE:${scoreStr}`, 10, 25);
+    ctx.fillText(`SCORE:${scoreStr}`, 150, 25);
 
     // WPM
-    ctx.fillText(`WPM:${state.wpm}`, 130, 25);
+    ctx.fillText(`WPM:${state.wpm}`, 265, 25);
 
     // Accuracy
-    ctx.fillText(`ACC:${accuracy}%`, 200, 25);
+    ctx.fillText(`ACC:${accuracy}%`, 330, 25);
 
     // Combo
     if (state.combo > 1) {
       ctx.fillStyle = '#ffaa00';
       ctx.shadowColor = '#ffaa00';
       ctx.shadowBlur = 6;
-      ctx.fillText(`x${state.combo}COMBO`, 285, 25);
+      ctx.fillText(`x${state.combo}COMBO`, 410, 25);
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#00ff41';
     } else {
-      ctx.fillText(`COMBO:x${state.combo}`, 285, 25);
+      ctx.fillText(`COMBO:x${state.combo}`, 410, 25);
     }
 
     // Words destroyed
-    ctx.fillText(`KILLS:${state.wordsDestroyed}`, 390, 25);
+    ctx.fillText(`KILLS:${state.wordsDestroyed}`, 510, 25);
 
     // Health bar
     const barX = w - 180;
